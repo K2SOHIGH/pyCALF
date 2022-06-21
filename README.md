@@ -1,100 +1,111 @@
-# CalcyaninFinder
+# pyCALF
 
-Find Calcyanin within fasta(s) file(s) in a three steps process :
- 
-  1) Detecte sequence with a GlyZIp triplication using a HMM profile. 
-  2) Resolve C-ter triplication composition using specifics GlyZips profiles. 
-  3) Annotate N-ter regions using known N-ter family (X,Y,Z and CoBaHMA) 
-
-## Decision tree : Calcyanin modular organisation and Calcyanin FLAG :
-
-<img src="./resources/img/decision_tree.svg">
+            _ (.".) _    
+           '-'/. .\'-'   
+             ( o o )     
+              `"-"`  
 
 
-## CalcyaninFinder WORKFLOW : 
-
-<img src="./resources/img/calcyanin_finder_workflow.svg">
-
-
-
-
+pyCALF stand for python CALcyanin Finder
+The calcyanin protein will be search and annotated within your input file(s) following three steps:
+    1) the glycine triplication specific of calcyanin will be searched using HMM profile.
+    2) glycine zipper will be annotated individually using specific HMM models for sequences with a glycine triplication.
+    3) the N-ter extremity of sequences with a glyX3 will be annotated using blastp and known n-ter as subject database.
+    
+    
 ## Dependencies :
-  - Biopython
-  - HMMER
-  - blast
-  - gffutils
+- pandas
+- pyhmmer
+- biopython
+- numpy==1.22.4
+- blast 
 
 
 ## Input :
 
-input_file: yaml file with file identifier as key and file path as value (translated CDS) 
-related_gff : yaml file with file identifier as key and file path as value (related GFF file with cds genomic position) 
-genome : yaml file with file identifier as key and file path as value (genome nucleotidic sequence(s)) 
-
+input_file: amino acide sequence fasta file
 
 ## Output :
 
 ```
 .
-├── fastas/ [nter, cter , calcyanin fasta files]
-├── GlyX3Finder/
-│   ├── assemblies/
-│   ├── batch-0
-│   │   ├── dom_tables
-│   │   └── tables
-│   ├── fastas
-│   └── tables
-├── GlyX3Solver
-│   └── tables
-├── NterSolver
-│   └── tables
-└── tables [calcyanin_feature_table.tsv  calcyanin.json  calcyanin.pkl  calcyanin.tsv
+├── fastas/glyx3seq.fasta
+├── intermediates
+│   ├── calglyx3.csv
+│   ├── calglyzips.csv
+│   └── calnter.csv
+├── summary.csv
+└── features.csv
 ```
 
-  - calcyanin_feature_table.tsv  [ feature table ~gff with start and stop position for N-ter and glycine zippers ]
-  - calcyanin.json ...
-  - calcyanin.pkl  ...
-  - calcyanin.tsv ...
+## INSTALLATION
 
-json entry example:
-```json
-{"lcl|NZ_CP089094.1_prot_WP_084990073.1_261": 
-  {"partial": "00", 
-  "pseudo": false, 
-  "assembly_accession": "GCF_021172085.1_ASM2117208v1", 
-  "length": 349, 
-  "ccya": {
-          "gr_accession": "NZ_CP089094.1", 
-          "gr_start": 266112, 
-          "gr_end": 267161, 
-          "strand": "-", 
-          "nucl_seq": "ATGGC....GCTAA", 
-          "src": "Protein Homology", 
-          "attr": "ID:cds-WP_084990073.1,Par...,product:cell envelope biogenesis protein OmpA,protein_id:WP_084990073.1,transl_table:11"
-          }, 
-   "calcyanin35": true, 
-   "Observed iACC (y/n)": "y", 
-   "calcyanin_flag": "Calcyanin with known N-ter", 
-   "nter": "Z-type", 
-   "cter": "Gly1,Gly2,Gly3", 
-   "features": [
-    {
-      "feature_id": "nter", 
-      "feature_type": "domain", 
-      "start": 0, 
-      "end": 113, 
-      "source": 
-      "blastp", 
-      "score": 2.9e-79, 
-      "ID": "Z-type", 
-      "SRC": "NZ_CP020771.1_prot_WP_084990073.1_4271", 
-      "coverage": 100
-     },
-     ], 
-  "sequence": "MANPDSSAS....VS"}
+```bash
+mamba create -n pycalf -c bioconda blast && conda activate pycalf;
+pip3 install git@github.com:K2SOHIGH/pyCALF.git
 ```
 
+## USAGE
 
+```bash
+pycalf --help
+```
 
-[performance update : proceed by batch instead of assembly -> decrease the number of job, reduce queuing.]
-# pyCALF
+```bash
+usage: pycalf [-h] -i TRANSLATED_CDS_INPUT [-e FILE_EXTENSION] -o RES_DIR [--log LOG] [--glyx3-hmm GLYX3_PHMM] [--domz DOMZ] [--glyx3-coverage GLY3_COVERAGE_THRESHOLD]
+              [--glyx3-evalue GLY3_EVALUE_THRESHOLD] [--glyx3-i-evalue GLY3_I_EVALUE_THRESHOLD] [--nterdb NTERDB_FA] [--nter-mapping-file NTERDB_TAB] [--nter-coverage NTER_COVERAGE]
+              [--nter-evalue NTER_EVALUE] [--gly1-phmm GLY1_PHMM] [--gly2-phmm GLY2_PHMM] [--gly3-phmm GLY3_PHMM] [--glyzip-i-evalue GLYZIP_I_EVALUE] [--glyzip-evalue GLYZIP_EVALUE] [--threads THREADS]
+
+        pyCALF
+
+                           _(__)_        V
+                          '-e e -'__,--.__)
+                           (o_o)        ) 
+                              \. /___.  |
+                              ||| _)/_)/
+                             //_(/_(/_(
+
+                        
+        pyCALF stand for python CALcyanin Finder
+        The calcyanin protein will be search and annotated within your input file(s) following three steps:
+            1) the glycine triplication specific of calcyanin will be searched using HMM profile.
+            2) glycine zipper will be annotated individually using specific HMM models for sequences with a glycine triplication.
+            3) the N-ter extremity of sequences with a glyX3 will be annotated using blastp and known n-ter as subject database.
+        
+
+options:
+  -h, --help            show this help message and exit
+  -i TRANSLATED_CDS_INPUT
+                        yaml file, fasta file or directory containing cds fasta files
+  -e FILE_EXTENSION     input files extension
+  -o RES_DIR            output directory
+  --log LOG             log file
+  --glyx3-hmm GLYX3_PHMM
+                        path to GlyX3 hmm profile (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/GlyX3.hmm)" 
+  --domz DOMZ           sequence space size (default: 10000)"
+  --glyx3-coverage GLY3_COVERAGE_THRESHOLD
+                        minimal coverage to be considered as a potential calcyanin (default: 0.62)
+  --glyx3-evalue GLY3_EVALUE_THRESHOLD
+                        hit's evalue threshold (default: 1e-30)
+  --glyx3-i-evalue GLY3_I_EVALUE_THRESHOLD
+                        domain's i_evalue threshold (default: 1)
+  --nterdb NTERDB_FA    path to nterdb fasta file (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/nterdb.fasta)
+  --nter-mapping-file NTERDB_TAB
+                        path to nterdb mapping file (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/nterdb.tsv)
+  --nter-coverage NTER_COVERAGE
+                        nter minimal coverage (default: 80)
+  --nter-evalue NTER_EVALUE
+                        nter evalue threshold (default: 1e-07)
+  --gly1-phmm GLY1_PHMM
+                        path to GlyZip1 hmm profile (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/Gly1.hmm)
+  --gly2-phmm GLY2_PHMM
+                        path to GlyZip2 hmm profile (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/Gly2.hmm)
+  --gly3-phmm GLY3_PHMM
+                        path to GlyZip3 hmm profile (default: /Users/maxime/Documents/SRC/modules/pyCALF/pyCALF/datas/Gly3.hmm)
+  --glyzip-i-evalue GLYZIP_I_EVALUE
+                        glyzip i-evalue threshold (default: 0.00036)
+  --glyzip-evalue GLYZIP_EVALUE
+                        glyzip evalue threshold (default: 1)
+  --threads THREADS     (default: 4)
+```
+
