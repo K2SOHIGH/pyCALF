@@ -16,7 +16,7 @@ setup(
         "numpy==1.22.4",
         "pyyaml==6.0",
         "pandas",
-        "gffutils",
+        # "gffutils",
     ],    
     include_package_data=True,
     entry_points = {

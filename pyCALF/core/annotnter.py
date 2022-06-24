@@ -36,16 +36,19 @@ def load_nter_mapping_file(f:str):
     assert os.path.exists(f)    
     with open(str(f),"r") as db:
         for r in db.readlines():
-            nter,seqid = r.strip().split()
-            nter_db_dict.update({seqid:nter})
+            nter,seqid,taxo = r.strip().split()
+            nter_db_dict.update(
+                {seqid:{"nter":nter,"taxo":taxo}}
+            )
     return nter_db_dict
 
 
  
 def nearest_neighboor( df:pd.DataFrame , db:str , coverage_threshold:float = 80 , evalue_threshold:float =3.6e-4 ):
     kn = load_nter_mapping_file(db)
-    df["domain"] = df["sacc"].map(kn)         
-
+    # df["domain"] = df["sacc"].map(kn)         
+    df["domain"] = df.apply(lambda x: kn[x.sacc]["nter"] if x.sacc in kn else None , axis=1)
+    df["organism"] = df.apply(lambda x: kn[x.sacc]["taxo"] if x.sacc in kn else None , axis=1)
     df = df[(df.evalue <= evalue_threshold) & (df.coverage > coverage_threshold)]                     
     df = df.sort_values(by="evalue",axis=0)
     
@@ -62,7 +65,7 @@ def nearest_neighboor( df:pd.DataFrame , db:str , coverage_threshold:float = 80 
                 evalue = j.evalue,
                 coverage = j.coverage,
                 desc = "nter",
-                src = j.sacc,
+                src = j.organism,#j.sacc,
             ) 
         )
     return nterhits
