@@ -39,6 +39,7 @@ logging.basicConfig(
     ]
 )
 
+print(sys.prefix)
 
 def get_args():
     parser = argparse.ArgumentParser(
