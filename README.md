@@ -108,5 +108,3 @@ options:
                         glyzip evalue threshold (default: 1)
   --threads THREADS     (default: 4)
 ```
-
-# WPpyCALF
