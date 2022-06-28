@@ -61,16 +61,12 @@ def get_args():
         """,
         formatter_class= argparse.RawTextHelpFormatter
         )
-    parser.add_argument('-i', dest='translated_cds_input', required=True, type=str, #action="extend", nargs="+" , 
+    parser.add_argument('-i', dest='translated_cds_input', required=True, #action="extend", nargs="+" , 
                         help='yaml file, fasta file or directory containing cds fasta files')
     parser.add_argument('-e', dest='file_extension', type=str, default="faa.gz" , 
                         help='input files extension')            
     parser.add_argument('-o', dest='res_dir', type=str, required=True,
                         help='output directory')   
-    #parser.add_argument('--gff', dest='gff_input', type=str,
-    #                    help='yaml file, fasta file or directory containing gff files')
-    #parser.add_argument('--fna', dest='genome_input', type=str,
-    #                    help='yaml file, fasta file or directory containing genomes files (fna)')                
     parser.add_argument('--log', dest='log', type=str,
                         help='log file')                
     parser.add_argument('--glyx3-hmm', dest='glyx3_phmm', type=str, default= DATASDIR + "/GlyX3.hmm" ,

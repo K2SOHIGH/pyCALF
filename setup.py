@@ -20,7 +20,7 @@ setup(
     ],    
     include_package_data=True,
     entry_points = {
-        'console_scripts': ['pycalf = pyCALF.main:main'],
+        'console_scripts': ['pycalf = pycalf.main:main'],
     },
     zip_safe=False
 )
