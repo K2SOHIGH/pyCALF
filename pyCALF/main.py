@@ -34,12 +34,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        #logging.FileHandler("clustering.log"),
         logging.StreamHandler()
     ]
 )
 
-print(sys.prefix)
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -67,8 +65,7 @@ def get_args():
                         help='input files extension')            
     parser.add_argument('-o', dest='res_dir', type=str, required=True,
                         help='output directory')   
-    parser.add_argument('--log', dest='log', type=str,
-                        help='log file')                
+              
     parser.add_argument('--glyx3-hmm', dest='glyx3_phmm', type=str, default= DATASDIR + "/GlyX3.hmm" ,
                         help='path to GlyX3 hmm profile (default: %(default)s)" ')                
     parser.add_argument('--domz', dest='domz', type=int, default=10000,
@@ -114,6 +111,8 @@ def get_args():
     parser.add_argument('--glyzip-evalue', dest='glyzip_evalue', 
                         type=int,default=1,
                         help="glyzip evalue threshold (default: %(default)s)")
+    
+    parser.add_argument('--log', default = None)
 
     parser.add_argument('--threads', type=int, default = multiprocessing.cpu_count(),
                         help="(default: %(default)s)")
@@ -127,6 +126,14 @@ def main():
     print(__doc__)
     args = get_args()
     
+    if args.log:
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh = logging.FileHandler(args.log , 'w' )
+        fh.setLevel(level=logging.DEBUG)
+        fh.setFormatter(formatter)
+        logging.getLogger('').addHandler(fh)
+        
+
     res_dir = os.path.abspath(args.res_dir)
      
 
@@ -151,7 +158,7 @@ def main():
         )
     logging.info("%i sequence with a glycine triplication found." % len(glyx3hits))
     
-
+    summary_df = None
     if glyx3hits:
         logging.info("make intermediate file for triplication ..." )
         u.maketable(glyx3hits).to_csv(
@@ -167,7 +174,6 @@ def main():
             )
         logging.info("done : %i glyx3+ sequences"  % len(glyx3seqs))
         if glyx3seqs:
-
             logging.info("loading glyzip' specific HMM profiles ... " )
             zhmms = [ u.easelhmm(i)  for i in [args.gly1_phmm , args.gly2_phmm , args.gly3_phmm] ]
             logging.info("done.")
@@ -224,8 +230,8 @@ def main():
             )
             logging.info("done.")
             logging.info("make feature table ... ")
-            df = u.maketable(glyx3hits + glyziphits +  nterhits)
-            df.to_csv(
+            summary_df = u.maketable(glyx3hits + glyziphits +  nterhits)
+            summary_df.to_csv(
                 res_dir + "/features.csv",
                 index=False,
                 header=True,
@@ -238,22 +244,24 @@ def main():
         reliable_cpt = 0
         with open(res_dir + "/summary.csv" , "w") as stream: 
             stream.write("accession;flag;nter;cter;is_trusted\n")
-            for seqid , featuredf in df.groupby("seqid"):
-                cterom = ",".join(
-                    list(
-                        featuredf[featuredf.desc == "glyzip"].sort_values("start").domid
-                        )
-                )
-                nterom = "".join(list(featuredf[featuredf.desc == "nter"].domid))
-                
-                flag = u.summarize(nterom,cterom)
-                
-                verif =  "checked" if flag == "Calcyanin with known N-ter" else "verification required"
-                if verif == "checked":
-                    reliable_cpt +=1
-                stream.write("{};{};{};{};{}\n".format(
-                    seqid, flag , nterom, cterom , verif )
-                )
+            if summary_df is not None: 
+                for seqid , featuredf in summary_df.groupby("seqid"):
+
+                    cterom = ",".join(
+                        list(
+                            featuredf[featuredf.desc == "glyzip"].sort_values("start").domid
+                            )
+                    )
+                    nterom = "".join(list(featuredf[featuredf.desc == "nter"].domid))
+                    
+                    flag = u.summarize(nterom,cterom)
+                    
+                    verif =  "checked" if flag == "Calcyanin with known N-ter" else "verification required"
+                    if verif == "checked":
+                        reliable_cpt +=1
+                    stream.write("{};{};{};{};{}\n".format(
+                        seqid, flag , nterom, cterom , verif )
+                    )
         
         logging.info("done.")
         logging.info("%i reliable calcyanin found." % reliable_cpt)

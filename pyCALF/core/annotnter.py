@@ -35,8 +35,7 @@ def run(cmd):
     elif "Annotation of 0 seqs with 0 annots finished." in stdout + stderr:
         error_msg = "No sequences processed!"
 
-    if error_msg:
-        print(error_msg)
+    if error_msg:        
         sys.exit(error_msg)
 
 
@@ -58,9 +57,9 @@ def blastp(query,subject,evalue = 1e-4):
         ]
         
     o = subprocess.run(command,capture_output=True)
-    print(o)
+    logging.info("nter output : " , o)
     res = o.stdout.decode('ascii').strip()
-    print(res)
+    
     if res:
         df = pd.read_table( StringIO(res)  , sep=";"  , header=None )          
         df.columns = "qacc sacc qlen slen evalue bitscore score pident nident mismatch qstart qend sstart send length qseq sseq qcovs qcovhsp".split(" ")
