@@ -113,6 +113,7 @@ def get_args():
                         help="glyzip evalue threshold (default: %(default)s)")
     
     parser.add_argument('--log', default = None)
+    parser.add_argument('--blastp', default = None)
 
     parser.add_argument('--threads', type=int, default = multiprocessing.cpu_count(),
                         help="(default: %(default)s)")
@@ -132,10 +133,11 @@ def main():
         fh.setLevel(level=logging.DEBUG)
         fh.setFormatter(formatter)
         logging.getLogger('').addHandler(fh)
-        
+
+    logging.info("blastp : " , args.blastp)        
 
     res_dir = os.path.abspath(args.res_dir)
-     
+
 
     os.makedirs(res_dir + "/fastas" , exist_ok=True)
     os.makedirs(res_dir + "/intermediates" , exist_ok=True)
@@ -206,14 +208,14 @@ def main():
             df = nter.blastp(                
                 res_dir + "/fastas/glyx3seq.fasta",
                 args.nterdb_fa,
-                args.nter_evalue
+                args.nter_evalue,
+                blastpexec=args.blastp
             )
             logging.info("done.")
 
             nterhits = []
 
-            if df is not None and not df.empty:         
-                              
+            if df is not None and not df.empty:                           
                 nterhits = nter.nearest_neighboor(
                     df,
                     DATASDIR + "/nterdb.tsv",

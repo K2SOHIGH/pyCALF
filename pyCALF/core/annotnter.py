@@ -39,32 +39,48 @@ def run(cmd):
         sys.exit(error_msg)
 
 
-def blastp(query,subject,evalue = 1e-4):
+def blastp(query,subject,evalue = 1e-4 , blastpexec = None):
     import sys
     if sys.version_info[0] < 3: 
         from StringIO import StringIO
     else:
         from io import StringIO
 
+    from shutil import which
+    if blastpexec is None:
+        blastpexec = which('blastp')
+        if blastpexec is None:
+            logging.critical("blastp command not found...")
+            raise OSError("blastp command not found...")
+    if blastpexec:
+        logging.info(blastpexec)
+        command = [
+                blastpexec,
+                "-query" , query,
+                "-subject", subject,
+                "-evalue" , str(evalue),
+                "-outfmt" , '"10 std slen"'
+                # '"10 delim=; qacc sacc qlen slen evalue bitscore score pident nident mismatch qstart qend sstart send length qseq sseq qcovs qcovhsp"'
+            ]
 
-    command = [
-            "blastp",
-            "-outfmt" , 
-            "6 delim=; qacc sacc qlen slen evalue bitscore score pident nident mismatch qstart qend sstart send length qseq sseq qcovs qcovhsp", 
-            "-query" , query,
-            "-subject", subject,
-            "-evalue" , str(evalue),
-        ]
+
+
+        logging.info("running : ")
+        logging.info(" ".join(command))
         
-    o = subprocess.run(command,capture_output=True)
-    logging.info("nter output : " , o)
-    res = o.stdout.decode('ascii').strip()
-    
-    if res:
-        df = pd.read_table( StringIO(res)  , sep=";"  , header=None )          
-        df.columns = "qacc sacc qlen slen evalue bitscore score pident nident mismatch qstart qend sstart send length qseq sseq qcovs qcovhsp".split(" ")
-        df["coverage"] = df.apply(lambda x: (x.send-x.sstart) / x.slen * 100, axis=1 )
-        return df
+        # using shell=true is not a problem here
+        o = subprocess.run(" ".join(command) , capture_output=True , shell=True) 
+
+
+        res = o.stdout.decode('ascii').strip()
+        if res:
+            df = pd.read_table( StringIO(res)  , sep=","  , header=None )          
+            # df.columns = "qacc sacc qlen slen evalue bitscore score pident nident mismatch qstart qend sstart send length qseq sseq qcovs qcovhsp".split(" ")
+            df.columns = "qacc sacc pident length mismatch gapopen qstart qend sstart send evalue bitscore slen".split(" ")
+            
+            
+            df["coverage"] = df.apply(lambda x: (x.send-x.sstart) / x.slen * 100, axis=1 )
+            return df
     logging.warning("N-ter annotation fail ... ")  
     return None
 
