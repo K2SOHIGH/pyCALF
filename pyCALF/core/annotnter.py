@@ -70,7 +70,7 @@ def blastp(query,subject,evalue = 1e-4 , blastpexec = None):
         
         # using shell=true is not a problem here
         o = subprocess.run(" ".join(command) , capture_output=True , shell=True) 
-
+        logging.info(o)
 
         res = o.stdout.decode('ascii').strip()
         if res:
@@ -80,9 +80,13 @@ def blastp(query,subject,evalue = 1e-4 , blastpexec = None):
             
             
             df["coverage"] = df.apply(lambda x: (x.send-x.sstart) / x.slen * 100, axis=1 )
+            logging.info(df)
             return df
-    logging.warning("N-ter annotation fail ... ")  
-    return None
+        else:
+            logging.warning("problem occured with blastp command %s " % res)  
+    else:
+        logging.warning("N-ter annotation fail ... ")  
+        return None
 
 
 
