@@ -52,7 +52,8 @@ def easelfasta(f:str,digital:bool=True):
         with pyhmmer.easel.SequenceFile(f, digital=digital) as seqs_file:
             return list(seqs_file)
     except ValueError:
-        raise ValueError("Illegal character found in fasta(s) sequence(s)")
+        with pyhmmer.easel.SequenceFile(f, digital=False) as seqs_file:
+            return [ s.digitize(pyhmmer.easel.Alphabet.amino())  for s in list(seqs_file)]
 
 
 def getseqbyname(name, sequences:list):
